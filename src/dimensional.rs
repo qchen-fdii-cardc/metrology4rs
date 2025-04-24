@@ -52,6 +52,7 @@ pub const LUMINOUS_INTENSITY: Dimension = Dimension::PowerLaw(0, 0, 0, 0, 0, 0, 
 // derived dimensions
 pub const AREA: Dimension = Dimension::PowerLaw(2, 0, 0, 0, 0, 0, 0);
 pub const VOLUME: Dimension = Dimension::PowerLaw(3, 0, 0, 0, 0, 0, 0);
+pub const FREQUENCY: Dimension = Dimension::PowerLaw(0, 0, -1, 0, 0, 0, 0);
 pub const VELOCITY: Dimension = Dimension::PowerLaw(1, 0, -1, 0, 0, 0, 0);
 pub const ACCELERATION: Dimension = Dimension::PowerLaw(1, 0, -2, 0, 0, 0, 0);
 pub const FORCE: Dimension = Dimension::PowerLaw(1, 1, -2, 0, 0, 0, 0);
@@ -132,7 +133,7 @@ impl Dimension {
         result
     }
     // define operator to get exponent of a given dimension
-    fn get_exponents(&self) -> [Rational32; 7] {
+    pub fn get_exponents(&self) -> [Rational32; 7] {
         match self {
             Dimension::PowerLaw(a, b, c, d, e, f, g) => [
                 Rational32::from_integer(*a),
@@ -315,4 +316,3 @@ impl ops::Index<usize> for Dimension {
         Box::leak(Box::new(exponents[index]))
     }
 }
-

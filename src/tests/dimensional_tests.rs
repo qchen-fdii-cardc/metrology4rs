@@ -185,8 +185,6 @@ fn test_standard_form_panic() {
     d.standard_form();
 }
 
-
-
 // =============================================
 // Index Access Tests
 // =============================================
@@ -228,4 +226,3 @@ fn test_exponent_manipulation() {
     let length = LENGTH.with_exponent(0, Rational32::new(1, 2));
     assert_eq!(length[0], Rational32::new(1, 2));
 }
-
