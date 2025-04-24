@@ -140,9 +140,9 @@ impl DimensionalAnalysis {
         }
 
         // Unique solution - create a column matrix
-        let mut solution = Matrix::new(1, n);
+        let mut solution = Matrix::new(n, 1);
         for i in 0..n {
-            solution[(0, i)] = ab[(i, n)];
+            solution[(i, 0)] = ab[(i, n)];
         }
 
         DimensionalAnalysisSolution::UniqueSolution(solution)

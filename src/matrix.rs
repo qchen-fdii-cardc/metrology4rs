@@ -16,20 +16,6 @@ where
     T: Clone + Zero + One + Signed + NumAssign + Debug + PartialOrd + Display,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        // if self.rows == 0 || self.cols == 0 {
-        //     return write!(f, "[]");
-        // }
-
-        // General case for matrices
-        // Find the maximum width needed for each column
-        // let mut col_widths = vec![0; self.cols];
-        // for j in 0..self.cols {
-        //     for i in 0..self.rows {
-        //         let width = format!("{}", self.data[j][i]).len();
-        //         col_widths[j] = col_widths[j].max(width);
-        //     }
-        // }
-
         // Print the matrix
         write!(f, "[")?;
         for i in 0..self.rows {
@@ -41,7 +27,7 @@ where
             
             for j in 0..self.cols {
                 let element = format!("{}", self.data[j][i]);
-                write!(f, "{}", element)?;
+                write!(f, "{:>5}", element)?;
                 if j < self.cols - 1 {
                     write!(f, ",")?;
                 }
