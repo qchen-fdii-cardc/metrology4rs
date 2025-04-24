@@ -5,7 +5,12 @@ use num::Rational32;
 
 #[test]
 fn test_solve_unique_solution() {
-    match solve_dimensional_analysis(FREQUENCY, vec![LENGTH, MASS, ACCELERATION]) {
+    println!("Testing unique solution case:");
+    println!("Target: FREQUENCY");
+    println!("Dimensions: [LENGTH, MASS, ACCELERATION]");
+    let result = solve_dimensional_analysis(FREQUENCY, vec![LENGTH, MASS, ACCELERATION]);
+    println!("Result: {}", result);
+    match result {
         DimensionalAnalysisSolution::UniqueSolution(coefs) => {
             assert_eq!(
                 coefs,
@@ -22,13 +27,15 @@ fn test_solve_unique_solution() {
 
 #[test]
 fn test_solve_multiple_solution() {
-    println!("Testing multiple solutions case:");
+    println!("\nTesting multiple solutions case 1:");
     println!("Target: LENGTH");
     println!("Dimensions: [MASS, ACCELERATION, FORCE * VELOCITY.powi(-2), VELOCITY]");
-    match solve_dimensional_analysis(
+    let result = solve_dimensional_analysis(
         LENGTH,
         vec![MASS, ACCELERATION, FORCE * VELOCITY.powi(-2), VELOCITY],
-    ) {
+    );
+    println!("Result: {}", result);
+    match result {
         DimensionalAnalysisSolution::MultipleSolutions { rank, n } => {
             assert_eq!(rank, 2);
             assert_eq!(n, 4);
@@ -36,14 +43,19 @@ fn test_solve_multiple_solution() {
         _ => panic!("Expected multiple solution"),
     }
 
-    match solve_dimensional_analysis(
+    println!("\nTesting multiple solutions case 2:");
+    println!("Target: DIMENSIONLESS");
+    println!("Dimensions: [MASS, ACCELERATION, FORCE * VELOCITY.powi(-2), VELOCITY]");
+    let result = solve_dimensional_analysis(
         DIMENSIONLESS,
-        vec![MASS, ACCELERATION, FORCE * VELOCITY.powi(-2), VELOCITY]
-    ) {
-        DimensionalAnalysisSolution::MultipleSolutions { rank, n} => {
+        vec![MASS, ACCELERATION, FORCE * VELOCITY.powi(-2), VELOCITY],
+    );
+    println!("Result: {}", result);
+    match result {
+        DimensionalAnalysisSolution::MultipleSolutions { rank, n } => {
             assert_eq!(rank, 2);
             assert_eq!(n, 4);
         }
-        _ => panic!("Explected multiple solution"),
+        _ => panic!("Expected multiple solution"),
     }
 }

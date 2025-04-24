@@ -1,6 +1,8 @@
 use crate::dimensional::*;
 use num::rational::Rational32;
 use num::traits::Signed;
+use std::fmt;
+
 
 #[derive(Debug)]
 pub enum DimensionalAnalysisSolution {
@@ -9,10 +11,30 @@ pub enum DimensionalAnalysisSolution {
     MultipleSolutions { rank: usize, n: usize },
 }
 
+impl fmt::Display for DimensionalAnalysisSolution {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            DimensionalAnalysisSolution::NoSolution => write!(f, "No feasible solution."),
+            DimensionalAnalysisSolution::UniqueSolution(v) => {
+                write!(f, "Unique solution: [")?;
+                for (i, &val) in v.iter().enumerate() {
+                    if i > 0 {
+                        write!(f, ", ")?;
+                    }
+                    write!(f, "{}", val)?;
+                }
+                write!(f, "]")
+            }
+            DimensionalAnalysisSolution::MultipleSolutions { rank, n } => {
+                write!(f, "Multiple solutions(rank = {}, variables = {})", rank, n)
+            }
+        }
+    }
+}
 /// Performs Gaussian elimination on a system of equations Ax = b
 /// A is represented as a vector of rows, each row is a [Rational32; 7]
 /// b is a column vector of size 7
-pub fn gaussian_elimination(
+fn gaussian_elimination(
     a: &mut Vec<[Rational32; 7]>,
     b: &mut [Rational32; 7],
 ) -> DimensionalAnalysisSolution {
@@ -156,3 +178,4 @@ pub fn solve_dimensional_analysis(
 
     gaussian_elimination(&mut a, &mut b)
 }
+
