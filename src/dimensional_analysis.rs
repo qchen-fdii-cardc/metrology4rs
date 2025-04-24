@@ -1,14 +1,24 @@
 use crate::dimensional::*;
+use crate::matrix::Matrix;
 use num::rational::Rational32;
-use num::traits::Signed;
 use std::fmt;
 
+#[derive(Clone, Debug)]
+pub struct DimensionalAnalysis {
+    pub target: Dimension,
+    pub dependencies: Vec<Dimension>,
+}
 
 #[derive(Debug)]
 pub enum DimensionalAnalysisSolution {
     NoSolution,
-    UniqueSolution(Vec<Rational32>),
-    MultipleSolutions { rank: usize, n: usize },
+    UniqueSolution(Matrix<Rational32>),
+    MultipleSolutions {
+        rank: usize,
+        n: usize,
+        reduced_a: Matrix<Rational32>,
+        reduced_b: Matrix<Rational32>,
+    },
 }
 
 impl fmt::Display for DimensionalAnalysisSolution {
@@ -16,166 +26,125 @@ impl fmt::Display for DimensionalAnalysisSolution {
         match self {
             DimensionalAnalysisSolution::NoSolution => write!(f, "No feasible solution."),
             DimensionalAnalysisSolution::UniqueSolution(v) => {
-                write!(f, "Unique solution: [")?;
-                for (i, &val) in v.iter().enumerate() {
-                    if i > 0 {
-                        write!(f, ", ")?;
-                    }
-                    write!(f, "{}", val)?;
-                }
-                write!(f, "]")
+                write!(f, "Unique solution:\n")?;
+                write!(f, "{}", v)
             }
-            DimensionalAnalysisSolution::MultipleSolutions { rank, n } => {
-                write!(f, "Multiple solutions(rank = {}, variables = {})", rank, n)
+            DimensionalAnalysisSolution::MultipleSolutions { rank, n, reduced_a, reduced_b } => {
+                writeln!(f, "Multiple solutions (rank = {}, variables = {})", rank, n)?;
+                writeln!(f, "Reduced row echelon form:")?;
+                writeln!(f, "A:\n{}", reduced_a)?;
+                write!(f, "b:\n{}", reduced_b)
             }
         }
     }
 }
-/// Performs Gaussian elimination on a system of equations Ax = b
-/// A is represented as a vector of rows, each row is a [Rational32; 7]
-/// b is a column vector of size 7
-fn gaussian_elimination(
-    a: &mut Vec<[Rational32; 7]>,
-    b: &mut [Rational32; 7],
-) -> DimensionalAnalysisSolution {
-    let n = a.len(); // number of variables
-    let m = 7; // number of equations
 
-    // println!("Initial matrix:");
-    // for i in 0..n {
-    //     print!("a({}) = [", i);
-    //     for (j, &val) in a[i].iter().enumerate() {
-    //         if j > 0 {
-    //             print!(", ");
-    //         }
-    //         print!("{}", val);
-    //     }
-    //     println!("]");
-    // }
-    // print!("b = [");
-    // for (i, &val) in b.iter().enumerate() {
-    //     if i > 0 {
-    //         print!(", ");
-    //     }
-    //     print!("{}", val);
-    // }
-    // println!("]");
+impl fmt::Display for DimensionalAnalysis {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let (ab, _) = self.build_augmented_matrix();
+        write!(f, "Ab=\n{}", ab)
+    }
+}
 
-    // Forward elimination
-    for col in 0..n {
-        // Find the row with the largest absolute value in the current column
-        let mut max_row = col;
-        for row in col..m {
-            if a[col][row].abs() > a[col][max_row].abs() {
-                max_row = row;
+impl DimensionalAnalysis {
+    /// Builds the augmented matrix [A|b] from the dimensional analysis problem
+    /// Returns a tuple of (matrix, non_zero_rows) where:
+    /// - matrix is the augmented matrix [A|b]
+    /// - non_zero_rows is the list of dimension indices that have non-zero values
+    fn build_augmented_matrix(&self) -> (Matrix<Rational32>, Vec<usize>) {
+        let n = self.dependencies.len();
+        
+        // Find which rows (dimensions) have at least one non-zero value
+        let mut non_zero_rows = Vec::new();
+        for i in 0..7 {
+            if self.target[i] != Rational32::from_integer(0)
+                || self.dependencies.iter().any(|dj| dj[i] != Rational32::from_integer(0))
+            {
+                non_zero_rows.push(i);
             }
         }
 
-        // If the maximum element is zero, skip this column
-        if a[col][max_row] == Rational32::from_integer(0) {
-            continue;
+        let m = non_zero_rows.len();
+        if m == 0 {
+            return (Matrix::new(0, n + 1), non_zero_rows);
         }
 
-        // Swap columns if necessary
-        if max_row != col {
-            for i in 0..n {
-                let temp = a[i][max_row];
-                a[i][col] = a[i][max_row];
-                a[i][max_row] = temp;
+        // Build the augmented matrix [A|b]
+        let mut ab = Matrix::new(m, n + 1);
+        for (row_idx, &dim_idx) in non_zero_rows.iter().enumerate() {
+            // Fill the right-hand side (b)
+            ab[(row_idx, n)] = self.target[dim_idx];
+            
+            // Fill the coefficient matrix (A)
+            for j in 0..n {
+                ab[(row_idx, j)] = self.dependencies[j][dim_idx];
             }
-            let temp = b[max_row];
-            b[max_row] = b[col];
-            b[col] = temp;
         }
 
-        // Eliminate the current column in all rows below
-        for row in (col + 1)..m {
-            if a[col][row] != Rational32::from_integer(0) {
-                let factor = a[col][row] / a[col][col];
-                for i in 0..n {
-                    a[i][row] = a[i][row] - factor * a[i][col];
+        (ab, non_zero_rows)
+    }
+
+    pub fn solve(&self) -> DimensionalAnalysisSolution {
+        let n = self.dependencies.len();
+        
+        // Build the augmented matrix
+        let (mut ab, non_zero_rows) = self.build_augmented_matrix();
+        let m = non_zero_rows.len();
+        
+        if m == 0 {
+            // Return a zero matrix for trivial solution
+            return DimensionalAnalysisSolution::UniqueSolution(Matrix::new(1, n));
+        }
+
+        // println!("Augmented matrix [A|b]:");
+        // println!("{}", ab);
+
+        // Convert to reduced row echelon form
+        let rank = ab.to_row_echelon_form();
+        // println!("Reduced row echelon form:");
+        // println!("{}", ab);
+
+        // Check for no solution
+        for i in 0..m {
+            let mut all_zeros = true;
+            for j in 0..n {
+                if ab[(i, j)] != Rational32::from_integer(0) {
+                    all_zeros = false;
+                    break;
                 }
-                b[row] = b[row] - factor * b[col];
             }
-        }
-    }
-
-    // println!("After forward elimination:");
-    // for i in 0..n {
-    //     print!("a({}) = [", i);
-    //     for (j, &val) in a[i].iter().enumerate() {
-    //         if j > 0 {
-    //             print!(", ");
-    //         }
-    //         print!("{}", val);
-    //     }
-    //     println!("]");
-    // }
-    // print!("b = [");
-    // for (i, &val) in b.iter().enumerate() {
-    //     if i > 0 {
-    //         print!(", ");
-    //     }
-    //     print!("{}", val);
-    // }
-    // println!("]");
-
-    // Check for multiple solutions
-    let mut rank = 0;
-    for i in 0..n {
-        if a[i][i] != Rational32::from_integer(0) {
-            rank += 1;
-        }
-    }
-
-    if rank < n {
-        // println!("Multiple solutions detected: rank = {}, n = {}", rank, n);
-        return DimensionalAnalysisSolution::MultipleSolutions { rank: rank, n: n };
-    }
-
-    // Back substitution for unique solution
-    let mut x = vec![Rational32::from_integer(0); n];
-    for row in (0..n).rev() {
-        let mut sum = Rational32::from_integer(0);
-        for col in (row + 1)..n {
-            sum = sum + a[col][row] * x[col];
-        }
-        if a[row][row] == Rational32::from_integer(0) {
-            if b[row] - sum != Rational32::from_integer(0) {
+            if all_zeros && ab[(i, n)] != Rational32::from_integer(0) {
                 return DimensionalAnalysisSolution::NoSolution;
             }
-            continue;
         }
-        x[row] = (b[row] - sum) / a[row][row];
-    }
 
-    // print!("Solution: [");
-    // for (i, &val) in x.iter().enumerate() {
-    //     if i > 0 {
-    //         print!(", ");
-    //     }
-    //     print!("{}", val);
-    // }
-    // println!("]");
-    DimensionalAnalysisSolution::UniqueSolution(x)
-}
+        if rank < n {
+            // Multiple solutions
+            let mut reduced_a = Matrix::new(m, n);
+            let mut reduced_b = Matrix::new(m, 1);
+            
+            // Extract the reduced matrix and vector
+            for i in 0..m {
+                for j in 0..n {
+                    reduced_a[(i, j)] = ab[(i, j)];
+                }
+                reduced_b[(i, 0)] = ab[(i, n)];
+            }
 
-pub fn solve_dimensional_analysis(
-    target: Dimension,
-    dimensions: Vec<Dimension>,
-) -> DimensionalAnalysisSolution {
-    let n = dimensions.len();
-    let mut a = vec![[Rational32::from_integer(0); 7]; n];
-    let mut b = [Rational32::from_integer(0); 7];
-
-    // Build the coefficient matrix and right-hand side vector
-    for i in 0..7 {
-        b[i] = target[i]; // Move target to right side with negative sign
-        for j in 0..n {
-            a[j][i] = dimensions[j][i]; // Transpose the matrix to match dimensions
+            return DimensionalAnalysisSolution::MultipleSolutions {
+                rank,
+                n,
+                reduced_a,
+                reduced_b,
+            };
         }
+
+        // Unique solution - create a column matrix
+        let mut solution = Matrix::new(1, n);
+        for i in 0..n {
+            solution[(0, i)] = ab[(i, n)];
+        }
+
+        DimensionalAnalysisSolution::UniqueSolution(solution)
     }
-
-    gaussian_elimination(&mut a, &mut b)
 }
-

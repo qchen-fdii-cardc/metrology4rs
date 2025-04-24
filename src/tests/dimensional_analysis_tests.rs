@@ -1,61 +1,85 @@
 use crate::dimensional::*;
-use crate::dimensional_analysis::DimensionalAnalysisSolution;
-use crate::dimensional_analysis::solve_dimensional_analysis;
-use num::Rational32;
+use crate::dimensional_analysis::*;
+use crate::matrix::Matrix;
+use num::rational::Rational32;
 
 #[test]
-fn test_solve_unique_solution() {
-    println!("Testing unique solution case:");
-    println!("Target: FREQUENCY");
-    println!("Dimensions: [LENGTH, MASS, ACCELERATION]");
-    let result = solve_dimensional_analysis(FREQUENCY, vec![LENGTH, MASS, ACCELERATION]);
-    println!("Result: {}", result);
+fn test_solve_dimensional_analysis_case_1() {
+    // Test case 1: Frequency = Length^(-1/2) * Mass^1 * Acceleration^(1/2)
+    let sys = DimensionalAnalysis {
+        target: FREQUENCY,
+        dependencies: vec![LENGTH, MASS, ACCELERATION],
+    };
+    let result = sys.solve();
+
     match result {
-        DimensionalAnalysisSolution::UniqueSolution(coefs) => {
-            assert_eq!(
-                coefs,
-                [
-                    Rational32::new(-1, 2),
-                    Rational32::from_integer(0),
-                    Rational32::new(1, 2)
-                ]
-            );
+        DimensionalAnalysisSolution::UniqueSolution(solution) => {
+            let expected = Matrix::from_rows(vec![vec![
+                Rational32::new(-1, 2),
+                Rational32::from_integer(0),
+                Rational32::new(1, 2),
+            ]]);
+            assert_eq!(solution, expected, "Expected unique solution");
         }
         _ => panic!("Expected unique solution"),
     }
 }
 
 #[test]
-fn test_solve_multiple_solution() {
-    println!("\nTesting multiple solutions case 1:");
-    println!("Target: LENGTH");
-    println!("Dimensions: [MASS, ACCELERATION, FORCE * VELOCITY.powi(-2), VELOCITY]");
-    let result = solve_dimensional_analysis(
-        LENGTH,
-        vec![MASS, ACCELERATION, FORCE * VELOCITY.powi(-2), VELOCITY],
-    );
-    println!("Result: {}", result);
-    match result {
-        DimensionalAnalysisSolution::MultipleSolutions { rank, n } => {
-            assert_eq!(rank, 2);
-            assert_eq!(n, 4);
-        }
-        _ => panic!("Expected multiple solution"),
-    }
+fn test_solve_dimensional_analysis_case_2() {
+    // Test case 2: No solution
+    let sys = DimensionalAnalysis {
+        target: FORCE,
+        dependencies: vec![LENGTH, TIME],
+    };
+    let result = sys.solve();
 
-    println!("\nTesting multiple solutions case 2:");
-    println!("Target: DIMENSIONLESS");
-    println!("Dimensions: [MASS, ACCELERATION, FORCE * VELOCITY.powi(-2), VELOCITY]");
-    let result = solve_dimensional_analysis(
-        DIMENSIONLESS,
-        vec![MASS, ACCELERATION, FORCE * VELOCITY.powi(-2), VELOCITY],
-    );
-    println!("Result: {}", result);
     match result {
-        DimensionalAnalysisSolution::MultipleSolutions { rank, n } => {
-            assert_eq!(rank, 2);
-            assert_eq!(n, 4);
+        DimensionalAnalysisSolution::NoSolution => (),
+        _ => panic!("Expected no solution"),
+    }
+}
+#[test]
+fn test_solve_dimensional_analysis_case_3() {
+    // Test case 3: Multiple solutions
+    let sys = DimensionalAnalysis {
+        target: DIMENSIONLESS,
+        dependencies: vec![MASS, ACCELERATION, FORCE * VELOCITY.powi(-2), VELOCITY],
+    };
+    println!("{}", sys);
+    let result = sys.solve();
+
+    match result {
+        DimensionalAnalysisSolution::MultipleSolutions { rank, n, reduced_a, reduced_b } => {
+            assert_eq!(rank, 3, "Expected rank 0");
+            assert_eq!(n, 4, "Expected 3 variables");
+            println!("A=\n{}", reduced_a);
+            println!("b=\n{}", reduced_b);
         }
-        _ => panic!("Expected multiple solution"),
+        _ => panic!("Expected multiple solutions"),
+    }
+}
+
+
+#[test]
+fn test_solve_dimensional_analysis_case_4() {
+    // Test case 3: Multiple solutions
+    let sys = DimensionalAnalysis {
+        target: LENGTH,
+        dependencies: vec![MASS, ACCELERATION, FORCE * VELOCITY.powi(-2), VELOCITY],
+    };
+    println!("{}", sys);
+
+    let result = sys.solve();
+
+
+    match result {
+        DimensionalAnalysisSolution::MultipleSolutions { rank, n, reduced_a, reduced_b } => {
+            assert_eq!(rank, 3, "Expected rank 0");
+            assert_eq!(n, 4, "Expected 3 variables");
+            println!("A=\n{}", reduced_a);
+            println!("b=\n{}", reduced_b);
+        }
+        _ => panic!("Expected multiple solutions"),
     }
 }
