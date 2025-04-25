@@ -63,3 +63,37 @@ in software applications.
 The QUDT ontology is available at: [Website](<http://www.qudt.org/>)
 
 The QUDT ontology is licensed under the Apache License, Version 2.0. See the LICENSE file for details.
+
+
+## QUDT本体架构
+
+
+
+
+### QuantityKind
+
+```mermaid
+graph LR
+    A[[Quantity]] --hasQuantityKind--> B[[QuantityKind]]
+    B --applicableUnit--> BB[[Unit]]
+    BB --hasQuantityKind--> B
+    BB --qkdvDenominator--> D
+    BB --qkdvNumerator--> D
+    BB --hasDimensionVector--> D
+    B --belongsToSytemOfQuantities--> C[[SystemOfQuantityKinds]]
+    B -- qkdvDenominator--> D[[QuantityKindDimensionVector]]
+    B -- qkdvNumerator--> D
+    B -- hasDimensionVector--> D
+    C --hasQuantityKind--> B
+    C --hasBaseQuantityKind--> B
+    C --hasDerivedQuantityKind--> B
+    D --hasReferenceQuantityKind--> B
+
+    B -->|exactMatch| B
+    BB --exactMatch/scalingOf--> BB
+
+    B --hasDimensionVector--> DD[[QuantityKindDimensionVector_SI]]
+
+    DD ==> D
+
+```
