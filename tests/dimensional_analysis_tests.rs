@@ -1,6 +1,6 @@
-use crate::dimensional::*;
-use crate::dimensional_analysis::*;
-use crate::matrix::Matrix;
+use metrology4rs::dimensional::*;
+use metrology4rs::dimensional_analysis::*;
+use metrology4rs::matrix::Matrix;
 use num::rational::Rational32;
 
 #[test]
@@ -14,11 +14,11 @@ fn test_solve_dimensional_analysis_case_1() {
 
     match result {
         DimensionalAnalysisSolution::UniqueSolution(solution) => {
-            let expected = Matrix::from_rows(vec![vec![
+            let expected = Matrix::from_col(vec![
                 Rational32::new(-1, 2),
                 Rational32::from_integer(0),
                 Rational32::new(1, 2),
-            ]]);
+            ]);
             assert_eq!(solution, expected, "Expected unique solution");
         }
         _ => panic!("Expected unique solution"),

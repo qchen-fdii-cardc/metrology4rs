@@ -1,6 +1,6 @@
-use crate::matrix::Matrix;
-use num::rational::Rational32;
+use metrology4rs::matrix::Matrix;
 use num::BigInt;
+use num::rational::Rational32;
 use num::traits::FromPrimitive;
 
 #[test]
@@ -8,7 +8,7 @@ fn test_matrix_creation() {
     let mat: Matrix<Rational32> = Matrix::new(2, 3);
     assert_eq!(mat.dimensions(), (2, 3));
     assert_eq!(mat[(0, 0)], Rational32::from_integer(0));
-    
+
     // Test empty matrix
     let empty_mat: Matrix<Rational32> = Matrix::new(0, 0);
     assert_eq!(empty_mat.dimensions(), (0, 0));
@@ -113,24 +113,35 @@ fn test_matrix_with_bigint() {
 #[test]
 fn test_row_and_col_access() {
     let mat = Matrix::from_rows(vec![
-        vec![Rational32::from_integer(1), Rational32::from_integer(2), Rational32::from_integer(3)],
-        vec![Rational32::from_integer(4), Rational32::from_integer(5), Rational32::from_integer(6)],
+        vec![
+            Rational32::from_integer(1),
+            Rational32::from_integer(2),
+            Rational32::from_integer(3),
+        ],
+        vec![
+            Rational32::from_integer(4),
+            Rational32::from_integer(5),
+            Rational32::from_integer(6),
+        ],
     ]);
 
     // Test row access
     let row0 = mat.row(0);
-    assert_eq!(row0, vec![
-        Rational32::from_integer(1),
-        Rational32::from_integer(2),
-        Rational32::from_integer(3)
-    ]);
+    assert_eq!(
+        row0,
+        vec![
+            Rational32::from_integer(1),
+            Rational32::from_integer(2),
+            Rational32::from_integer(3)
+        ]
+    );
 
     // Test column access
     let col1 = mat.col(1);
-    assert_eq!(col1, vec![
-        Rational32::from_integer(2),
-        Rational32::from_integer(5)
-    ]);
+    assert_eq!(
+        col1,
+        vec![Rational32::from_integer(2), Rational32::from_integer(5)]
+    );
 
     // Test with empty matrix
     let empty_mat: Matrix<Rational32> = Matrix::new(0, 0);
@@ -229,9 +240,21 @@ fn test_col_max_abs() {
 
     // Test with a larger matrix
     let mat = Matrix::from_rows(vec![
-        vec![Rational32::new(-1, 2), Rational32::from_integer(2), Rational32::from_integer(0)],
-        vec![Rational32::from_integer(3), Rational32::new(-4, 1), Rational32::from_integer(5)],
-        vec![Rational32::from_integer(1), Rational32::from_integer(1), Rational32::from_integer(6)],
+        vec![
+            Rational32::new(-1, 2),
+            Rational32::from_integer(2),
+            Rational32::from_integer(0),
+        ],
+        vec![
+            Rational32::from_integer(3),
+            Rational32::new(-4, 1),
+            Rational32::from_integer(5),
+        ],
+        vec![
+            Rational32::from_integer(1),
+            Rational32::from_integer(1),
+            Rational32::from_integer(6),
+        ],
     ]);
 
     let (row, val) = mat.col_max_abs(0);
@@ -280,16 +303,28 @@ fn test_index_operations() {
 fn test_row_echelon_form() {
     // Test case 1: Full rank matrix
     let mut mat = Matrix::from_rows(vec![
-        vec![Rational32::from_integer(1), Rational32::from_integer(2), Rational32::from_integer(3)],
-        vec![Rational32::from_integer(4), Rational32::from_integer(5), Rational32::from_integer(6)],
-        vec![Rational32::from_integer(7), Rational32::from_integer(8), Rational32::from_integer(9)],
+        vec![
+            Rational32::from_integer(1),
+            Rational32::from_integer(2),
+            Rational32::from_integer(3),
+        ],
+        vec![
+            Rational32::from_integer(4),
+            Rational32::from_integer(5),
+            Rational32::from_integer(6),
+        ],
+        vec![
+            Rational32::from_integer(7),
+            Rational32::from_integer(8),
+            Rational32::from_integer(9),
+        ],
     ]);
     println!("Original matrix:");
     println!("{}", mat);
     let rank = mat.to_row_echelon_form();
     println!("Reduced row echelon form:");
     println!("{}", mat);
-    assert_eq!(rank, 2);  // This matrix has rank 2
+    assert_eq!(rank, 2); // This matrix has rank 2
     assert_eq!(mat[(0, 0)], Rational32::from_integer(1));
     assert_eq!(mat[(1, 0)], Rational32::from_integer(0));
     assert_eq!(mat[(2, 0)], Rational32::from_integer(0));
@@ -317,7 +352,7 @@ fn test_row_echelon_form() {
     let rank = mat.to_row_echelon_form();
     println!("Reduced row echelon form:");
     println!("{}", mat);
-    assert_eq!(rank, 1);  // Rows are linearly dependent
+    assert_eq!(rank, 1); // Rows are linearly dependent
     assert_eq!(mat[(0, 0)], Rational32::from_integer(1));
     assert_eq!(mat[(0, 1)], Rational32::from_integer(2));
     assert_eq!(mat[(1, 0)], Rational32::from_integer(0));
@@ -333,7 +368,7 @@ fn test_row_echelon_form() {
     let rank = mat.to_row_echelon_form();
     println!("Reduced row echelon form:");
     println!("{}", mat);
-    assert_eq!(rank, 2);  // Full rank
+    assert_eq!(rank, 2); // Full rank
     assert_eq!(mat[(0, 0)], Rational32::from_integer(1));
     assert_eq!(mat[(1, 0)], Rational32::from_integer(0));
     assert_eq!(mat[(0, 1)], Rational32::from_integer(0));
@@ -341,16 +376,28 @@ fn test_row_echelon_form() {
 
     // Test case 6: Matrix that requires both forward and backward elimination
     let mut mat = Matrix::from_rows(vec![
-        vec![Rational32::from_integer(1), Rational32::from_integer(2), Rational32::from_integer(3)],
-        vec![Rational32::from_integer(2), Rational32::from_integer(4), Rational32::from_integer(6)],
-        vec![Rational32::from_integer(1), Rational32::from_integer(1), Rational32::from_integer(1)],
+        vec![
+            Rational32::from_integer(1),
+            Rational32::from_integer(2),
+            Rational32::from_integer(3),
+        ],
+        vec![
+            Rational32::from_integer(2),
+            Rational32::from_integer(4),
+            Rational32::from_integer(6),
+        ],
+        vec![
+            Rational32::from_integer(1),
+            Rational32::from_integer(1),
+            Rational32::from_integer(1),
+        ],
     ]);
     println!("Original matrix:");
     println!("{}", mat);
     let rank = mat.to_row_echelon_form();
     println!("Reduced row echelon form:");
     println!("{}", mat);
-    assert_eq!(rank, 2);  // Rank is 2
+    assert_eq!(rank, 2); // Rank is 2
     assert_eq!(mat[(0, 0)], Rational32::from_integer(1));
     assert_eq!(mat[(1, 0)], Rational32::from_integer(0));
     assert_eq!(mat[(2, 0)], Rational32::from_integer(0));
@@ -394,9 +441,11 @@ fn test_matrix_display() {
     assert_eq!(format!("{}", empty_mat), expected);
 
     // Test case 5: Row vector
-    let row_vec = Matrix::from_rows(vec![
-        vec![Rational32::from_integer(1), Rational32::from_integer(2), Rational32::from_integer(3)],
-    ]);
+    let row_vec = Matrix::from_rows(vec![vec![
+        Rational32::from_integer(1),
+        Rational32::from_integer(2),
+        Rational32::from_integer(3),
+    ]]);
     let expected = "[[1,2,3]]";
     assert_eq!(format!("{}", row_vec), expected);
 
@@ -413,9 +462,21 @@ fn test_matrix_display() {
 
     // Test case 7: Larger matrix
     let mat = Matrix::from_rows(vec![
-        vec![Rational32::from_integer(1), Rational32::from_integer(2), Rational32::from_integer(3)],
-        vec![Rational32::from_integer(4), Rational32::from_integer(5), Rational32::from_integer(6)],
-        vec![Rational32::from_integer(7), Rational32::from_integer(8), Rational32::from_integer(9)],
+        vec![
+            Rational32::from_integer(1),
+            Rational32::from_integer(2),
+            Rational32::from_integer(3),
+        ],
+        vec![
+            Rational32::from_integer(4),
+            Rational32::from_integer(5),
+            Rational32::from_integer(6),
+        ],
+        vec![
+            Rational32::from_integer(7),
+            Rational32::from_integer(8),
+            Rational32::from_integer(9),
+        ],
     ]);
     let expected = "[[1,2,3],
  [4,5,6],
@@ -426,9 +487,11 @@ fn test_matrix_display() {
 #[test]
 fn test_row_and_column_vectors() {
     // Test row vector (1x3)
-    let row_vec = Matrix::from_rows(vec![
-        vec![Rational32::from_integer(1), Rational32::from_integer(2), Rational32::from_integer(3)],
-    ]);
+    let row_vec = Matrix::from_rows(vec![vec![
+        Rational32::from_integer(1),
+        Rational32::from_integer(2),
+        Rational32::from_integer(3),
+    ]]);
     assert_eq!(row_vec.dimensions(), (1, 3));
     let expected = "[[1,2,3]]";
     assert_eq!(format!("{}", row_vec), expected);
@@ -446,9 +509,11 @@ fn test_row_and_column_vectors() {
     assert_eq!(format!("{}", col_vec), expected);
 
     // Test row vector with fractions
-    let row_vec = Matrix::from_rows(vec![
-        vec![Rational32::new(1, 2), Rational32::new(3, 4), Rational32::new(5, 6)],
-    ]);
+    let row_vec = Matrix::from_rows(vec![vec![
+        Rational32::new(1, 2),
+        Rational32::new(3, 4),
+        Rational32::new(5, 6),
+    ]]);
     let expected = "[[1/2,3/4,5/6]]";
     assert_eq!(format!("{}", row_vec), expected);
 
@@ -464,9 +529,11 @@ fn test_row_and_column_vectors() {
     assert_eq!(format!("{}", col_vec), expected);
 
     // Test row vector with different width numbers
-    let row_vec = Matrix::from_rows(vec![
-        vec![Rational32::from_integer(1), Rational32::from_integer(200), Rational32::from_integer(30)],
-    ]);
+    let row_vec = Matrix::from_rows(vec![vec![
+        Rational32::from_integer(1),
+        Rational32::from_integer(200),
+        Rational32::from_integer(30),
+    ]]);
     let expected = "[[1,200,30]]";
     assert_eq!(format!("{}", row_vec), expected);
 
@@ -480,4 +547,179 @@ fn test_row_and_column_vectors() {
  [200],
  [30]]";
     assert_eq!(format!("{}", col_vec), expected);
-} 
+}
+
+#[test]
+fn test_matrix_from_col_row() {
+    // Test from_col
+    let col_vec = vec![
+        Rational32::from_integer(1),
+        Rational32::from_integer(2),
+        Rational32::from_integer(3),
+    ];
+    let col_mat = Matrix::from_col(col_vec);
+    assert_eq!(col_mat.dimensions(), (3, 1));
+    assert_eq!(col_mat[(0, 0)], Rational32::from_integer(1));
+    assert_eq!(col_mat[(1, 0)], Rational32::from_integer(2));
+    assert_eq!(col_mat[(2, 0)], Rational32::from_integer(3));
+
+    // Test from_row
+    let row_vec = vec![
+        Rational32::from_integer(1),
+        Rational32::from_integer(2),
+        Rational32::from_integer(3),
+    ];
+    let row_mat = Matrix::from_row(row_vec);
+    assert_eq!(row_mat.dimensions(), (1, 3));
+    assert_eq!(row_mat[(0, 0)], Rational32::from_integer(1));
+    assert_eq!(row_mat[(0, 1)], Rational32::from_integer(2));
+    assert_eq!(row_mat[(0, 2)], Rational32::from_integer(3));
+
+    // Test empty vectors
+    let empty_col_mat = Matrix::<Rational32>::from_col(Vec::new());
+    assert_eq!(empty_col_mat.dimensions(), (0, 0));
+    let empty_row_mat = Matrix::<Rational32>::from_row(Vec::new());
+    assert_eq!(empty_row_mat.dimensions(), (0, 0));
+}
+
+#[test]
+fn test_matrix_from_cols() {
+    // Test normal case
+    let cols = vec![
+        vec![Rational32::from_integer(1), Rational32::from_integer(4)],
+        vec![Rational32::from_integer(2), Rational32::from_integer(5)],
+        vec![Rational32::from_integer(3), Rational32::from_integer(6)],
+    ];
+    let mat = Matrix::from_cols(cols);
+    assert_eq!(mat.dimensions(), (2, 3));
+    assert_eq!(mat[(0, 0)], Rational32::from_integer(1));
+    assert_eq!(mat[(1, 0)], Rational32::from_integer(4));
+    assert_eq!(mat[(0, 2)], Rational32::from_integer(3));
+    assert_eq!(mat[(1, 2)], Rational32::from_integer(6));
+
+    // Test empty matrix
+    let empty_mat = Matrix::<Rational32>::from_cols(Vec::new());
+    assert_eq!(empty_mat.dimensions(), (0, 0));
+}
+
+#[test]
+fn test_display_edge_cases() {
+    // Test with negative fractions
+    let mat = Matrix::from_rows(vec![
+        vec![Rational32::new(-1, 2), Rational32::new(-3, 4)],
+        vec![Rational32::new(5, -6), Rational32::new(-7, -8)],
+    ]);
+    let expected = "[[-1/2,-3/4],
+ [-5/6,7/8]]";
+    assert_eq!(format!("{}", mat), expected);
+
+    // Test with single element
+    let mat = Matrix::from_rows(vec![vec![Rational32::from_integer(1)]]);
+    assert_eq!(format!("{}", mat), "[[1]]");
+}
+
+#[test]
+fn test_empty_matrix_operations() {
+    let empty_mat: Matrix<Rational32> = Matrix::new(0, 0);
+
+    // Test operations with empty matrix
+    assert_eq!(empty_mat.row(0), Vec::new());
+    assert_eq!(empty_mat.col(0), Vec::new());
+
+    let (row, val) = empty_mat.col_max_abs(0);
+    assert_eq!(row, 0);
+    assert_eq!(val, Rational32::from_integer(0));
+
+    let (col, val) = empty_mat.row_max_abs(0);
+    assert_eq!(col, 0);
+    assert_eq!(val, Rational32::from_integer(0));
+}
+
+#[test]
+fn test_row_echelon_edge_cases() {
+    // Test with 1x1 matrix
+    let mut mat = Matrix::from_rows(vec![vec![Rational32::from_integer(2)]]);
+    let rank = mat.to_row_echelon_form();
+    assert_eq!(rank, 1);
+    assert_eq!(mat[(0, 0)], Rational32::from_integer(1));
+
+    // Test with wide matrix (more columns than rows)
+    let mut mat = Matrix::from_rows(vec![
+        vec![
+            Rational32::from_integer(1),
+            Rational32::from_integer(2),
+            Rational32::from_integer(3),
+        ],
+        vec![
+            Rational32::from_integer(4),
+            Rational32::from_integer(5),
+            Rational32::from_integer(6),
+        ],
+    ]);
+    let rank = mat.to_row_echelon_form();
+    assert_eq!(rank, 2);
+
+    // Test with tall matrix (more rows than columns)
+    let mut mat = Matrix::from_rows(vec![
+        vec![Rational32::from_integer(1), Rational32::from_integer(2)],
+        vec![Rational32::from_integer(3), Rational32::from_integer(4)],
+        vec![Rational32::from_integer(5), Rational32::from_integer(6)],
+    ]);
+    let rank = mat.to_row_echelon_form();
+    assert_eq!(rank, 2);
+}
+
+#[test]
+#[should_panic]
+fn test_invalid_indices() {
+    let mat = Matrix::from_rows(vec![
+        vec![Rational32::from_integer(1), Rational32::from_integer(2)],
+        vec![Rational32::from_integer(3), Rational32::from_integer(4)],
+    ]);
+
+    let _ = mat[(2, 0)]; // Should panic: row index out of bounds
+}
+
+#[test]
+fn test_matrix_clone_and_eq() {
+    let mat1 = Matrix::from_rows(vec![
+        vec![Rational32::from_integer(1), Rational32::from_integer(2)],
+        vec![Rational32::from_integer(3), Rational32::from_integer(4)],
+    ]);
+
+    let mat2 = mat1.clone();
+    assert_eq!(mat1, mat2);
+
+    // Test inequality
+    let mat3 = Matrix::from_rows(vec![
+        vec![Rational32::from_integer(1), Rational32::from_integer(2)],
+        vec![Rational32::from_integer(3), Rational32::from_integer(5)], // Different value
+    ]);
+    assert_ne!(mat1, mat3);
+}
+
+#[test]
+fn test_matrix_numeric_conversions() {
+    // Test with different numeric types
+    let int_mat = Matrix::from_rows(vec![vec![1_i32, 2_i32], vec![3_i32, 4_i32]]);
+    assert_eq!(int_mat.dimensions(), (2, 2));
+
+    let float_mat = Matrix::from_rows(vec![vec![1.0_f64, 2.0_f64], vec![3.0_f64, 4.0_f64]]);
+    assert_eq!(float_mat.dimensions(), (2, 2));
+}
+
+#[test]
+#[should_panic]
+fn test_incompatible_matrix_operations() {
+    let mat1 = Matrix::from_rows(vec![vec![
+        Rational32::from_integer(1),
+        Rational32::from_integer(2),
+    ]]);
+    let mat2 = Matrix::from_rows(vec![
+        vec![Rational32::from_integer(3)],
+        vec![Rational32::from_integer(4)],
+    ]);
+
+    // This should panic because dimensions don't match
+    let _ = mat1.row(2); // Out of bounds row access
+}

@@ -1,4 +1,4 @@
-use crate::dimensional::*;
+use metrology4rs::dimensional::*;
 use num::Rational32;
 use std::boxed::Box;
 

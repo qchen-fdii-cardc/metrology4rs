@@ -1,12 +1,12 @@
-use num::traits::{Zero, One, Signed, NumAssign};
-use std::ops::{Index, IndexMut};
+use num::traits::{NumAssign, One, Signed, Zero};
+use std::cmp::{PartialEq, PartialOrd};
 use std::fmt::{Debug, Display, Formatter, Result};
-use std::cmp::{PartialOrd, PartialEq};
+use std::ops::{Index, IndexMut};
 
 /// A matrix stored in column-major order
 #[derive(Debug, Clone, PartialEq)]
 pub struct Matrix<T> {
-    data: Vec<Vec<T>>,  // column-major storage
+    data: Vec<Vec<T>>, // column-major storage
     rows: usize,
     cols: usize,
 }
@@ -24,10 +24,10 @@ where
             } else {
                 write!(f, "\n [")?;
             }
-            
+
             for j in 0..self.cols {
                 let element = format!("{}", self.data[j][i]);
-                write!(f, "{:>5}", element)?;
+                write!(f, "{}", element)?;
                 if j < self.cols - 1 {
                     write!(f, ",")?;
                 }
@@ -41,7 +41,7 @@ where
     }
 }
 
-impl<T> Matrix<T> 
+impl<T> Matrix<T>
 where
     T: Clone + Zero + One + Signed + NumAssign + Debug + PartialOrd,
 {
@@ -51,6 +51,45 @@ where
         Matrix { data, rows, cols }
     }
 
+    /// Create a matrix from a 1D vector column
+    pub fn from_col(col: Vec<T>) -> Self {
+        if col.is_empty() {
+            return Matrix::new(0, 0);
+        }
+        let rows = col.len();
+        let cols = 1;
+        let data = vec![col];
+        Matrix { data, rows, cols }
+    }
+
+    /// Create a matrix from a 1D vector row
+    pub fn from_row(row: Vec<T>) -> Self {
+        if row.is_empty() {
+            return Matrix::new(0, 0);
+        }
+        let rows = 1;
+        let cols = row.len();
+        let mut data = vec![vec![T::zero(); rows]; cols];
+        for (j, value) in row.into_iter().enumerate() {
+            data[j][0] = value;
+        }
+        Matrix { data, rows, cols }
+    }
+
+    /// Create a matrix from a 2D vector (col-major input)
+    pub fn from_cols(cols: Vec<Vec<T>>) -> Self {
+        if cols.is_empty() {
+            return Matrix::new(0, 0);
+        }
+        let cols_count = cols.len();
+        let rows_count = if cols_count > 0 { cols[0].len() } else { 0 };
+        Matrix {
+            data: cols,
+            rows: rows_count,
+            cols: cols_count,
+        }
+    }
+
     /// Create a matrix from a 2D vector (row-major input)
     pub fn from_rows(rows: Vec<Vec<T>>) -> Self {
         if rows.is_empty() {
@@ -58,7 +97,7 @@ where
         }
         let rows_count = rows.len();
         let cols_count = rows[0].len();
-        
+
         // Convert from row-major to column-major
         let mut data = vec![vec![T::zero(); rows_count]; cols_count];
         for i in 0..rows_count {
@@ -66,7 +105,7 @@ where
                 data[j][i] = rows[i][j].clone();
             }
         }
-        
+
         Matrix {
             data,
             rows: rows_count,
@@ -145,7 +184,7 @@ where
         }
         let mut max_col = 0;
         let mut max_val = self.data[0][i].abs();
-        
+
         for j in 1..self.cols {
             let val = self.data[j][i].abs();
             if val > max_val {
@@ -153,7 +192,7 @@ where
                 max_val = val;
             }
         }
-        
+
         (max_col, max_val)
     }
 
@@ -164,7 +203,7 @@ where
         }
         let mut max_row = 0;
         let mut max_val = self.data[j][0].abs();
-        
+
         for i in 1..self.rows {
             let val = self.data[j][i].abs();
             if val > max_val {
@@ -172,7 +211,7 @@ where
                 max_val = val;
             }
         }
-        
+
         (max_row, max_val)
     }
 
@@ -191,8 +230,8 @@ where
             // Find the pivot row (row with largest absolute value in current column)
             let mut max_row = i;
             let mut max_val = self.data[pivot_col][i].abs();
-            
-            for k in i+1..self.rows {
+
+            for k in i + 1..self.rows {
                 let val = self.data[pivot_col][k].abs();
                 if val > max_val {
                     max_row = k;
@@ -221,7 +260,7 @@ where
             }
 
             // Eliminate entries below the pivot
-            for k in i+1..self.rows {
+            for k in i + 1..self.rows {
                 let factor = self.data[pivot_col][k].clone();
                 if factor != T::zero() {
                     self.add_mul_row(k, i, -factor);
@@ -261,22 +300,22 @@ where
 }
 
 // Implement indexing operations
-impl<T> Index<(usize, usize)> for Matrix<T> 
+impl<T> Index<(usize, usize)> for Matrix<T>
 where
     T: Clone + Zero + One + Signed + NumAssign + Debug + PartialOrd,
 {
     type Output = T;
 
     fn index(&self, (i, j): (usize, usize)) -> &Self::Output {
-        &self.data[j][i]  // Note: column-major order
+        &self.data[j][i] // Note: column-major order
     }
 }
 
-impl<T> IndexMut<(usize, usize)> for Matrix<T> 
+impl<T> IndexMut<(usize, usize)> for Matrix<T>
 where
     T: Clone + Zero + One + Signed + NumAssign + Debug + PartialOrd,
 {
     fn index_mut(&mut self, (i, j): (usize, usize)) -> &mut Self::Output {
-        &mut self.data[j][i]  // Note: column-major order
+        &mut self.data[j][i] // Note: column-major order
     }
-} 
+}
