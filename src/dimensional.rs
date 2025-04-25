@@ -1,3 +1,4 @@
+#![doc = include_str!("../doc/dimensional.md")]
 use num::Rational32;
 use std::clone::Clone;
 use std::fmt;

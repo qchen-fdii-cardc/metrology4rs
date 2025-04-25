@@ -1,3 +1,4 @@
+#![doc = include_str!("../doc/matrix.md")]
 use num::traits::{NumAssign, One, Signed, Zero};
 use std::cmp::{PartialEq, PartialOrd};
 use std::fmt::{Debug, Display, Formatter, Result};

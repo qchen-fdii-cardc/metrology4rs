@@ -1,3 +1,4 @@
+#![doc = include_str!("../doc/dimensional_analysis.md")]
 use crate::dimensional::*;
 use crate::matrix::Matrix;
 use num::rational::Rational32;
@@ -29,7 +30,12 @@ impl fmt::Display for DimensionalAnalysisSolution {
                 write!(f, "Unique solution:\n")?;
                 write!(f, "{}", v)
             }
-            DimensionalAnalysisSolution::MultipleSolutions { rank, n, reduced_a, reduced_b } => {
+            DimensionalAnalysisSolution::MultipleSolutions {
+                rank,
+                n,
+                reduced_a,
+                reduced_b,
+            } => {
                 writeln!(f, "Multiple solutions (rank = {}, variables = {})", rank, n)?;
                 writeln!(f, "Reduced row echelon form:")?;
                 writeln!(f, "A:\n{}", reduced_a)?;
@@ -53,12 +59,15 @@ impl DimensionalAnalysis {
     /// - non_zero_rows is the list of dimension indices that have non-zero values
     fn build_augmented_matrix(&self) -> (Matrix<Rational32>, Vec<usize>) {
         let n = self.dependencies.len();
-        
+
         // Find which rows (dimensions) have at least one non-zero value
         let mut non_zero_rows = Vec::new();
         for i in 0..7 {
             if self.target[i] != Rational32::from_integer(0)
-                || self.dependencies.iter().any(|dj| dj[i] != Rational32::from_integer(0))
+                || self
+                    .dependencies
+                    .iter()
+                    .any(|dj| dj[i] != Rational32::from_integer(0))
             {
                 non_zero_rows.push(i);
             }
@@ -74,7 +83,7 @@ impl DimensionalAnalysis {
         for (row_idx, &dim_idx) in non_zero_rows.iter().enumerate() {
             // Fill the right-hand side (b)
             ab[(row_idx, n)] = self.target[dim_idx];
-            
+
             // Fill the coefficient matrix (A)
             for j in 0..n {
                 ab[(row_idx, j)] = self.dependencies[j][dim_idx];
@@ -86,11 +95,11 @@ impl DimensionalAnalysis {
 
     pub fn solve(&self) -> DimensionalAnalysisSolution {
         let n = self.dependencies.len();
-        
+
         // Build the augmented matrix
         let (mut ab, non_zero_rows) = self.build_augmented_matrix();
         let m = non_zero_rows.len();
-        
+
         if m == 0 {
             // Return a zero matrix for trivial solution
             return DimensionalAnalysisSolution::UniqueSolution(Matrix::new(1, n));
@@ -122,7 +131,7 @@ impl DimensionalAnalysis {
             // Multiple solutions
             let mut reduced_a = Matrix::new(m, n);
             let mut reduced_b = Matrix::new(m, 1);
-            
+
             // Extract the reduced matrix and vector
             for i in 0..m {
                 for j in 0..n {
