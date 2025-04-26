@@ -1,6 +1,17 @@
 
 # Rust Metrology Library
 
+$abc$
+
+$$
+qqw
+$$
+
+```mermaid
+graph TD
+    A(Metrology4rs) --> B[Matrix]
+```
+
 This library provides a collection of modules and functions for performing various metrology-related calculations.
 It includes modules for handling matrices, dimensional analysis, and unit conversions.
 
@@ -45,4 +56,4 @@ fn main() {
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
